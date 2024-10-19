@@ -1,8 +1,12 @@
 #include <ncurses.h>
 #include "ncurses_funcs.h"
 
+#define HELP_DELAY 50000
+#define TITLE_BORDER_DELAY 5000
+
 static void init_ncurses();
 static void display_title();
+static void print_title_border();
 static void play_maze();
 
 int main() {
@@ -49,9 +53,31 @@ static void display_title() {
 
     char *help_msg1 = "s-start";
     char *help_msg2 = "q-quit";
-    int help_delay = 50000;
-    print_center(help_msg1, help_delay, 3, 1); 
-    print_center(help_msg2, help_delay, 4, 1); 
+    print_center(help_msg1, HELP_DELAY, 3, 1); 
+    print_center(help_msg2, HELP_DELAY, 4, 1); 
+
+    print_title_border();
+}
+
+static void print_title_border() {
+    int row, col, x, y;
+    getmaxyx(stdscr, row, col);
+
+    char* border_char = "#";
+
+    x = 0;
+    for(y = 0; y < col; y++) {
+        print_delay(border_char, TITLE_BORDER_DELAY, x, y);
+    }
+    for(x = 1; x < row; x++) {
+        print_delay(border_char, TITLE_BORDER_DELAY, x, y);
+    }
+    for(y = y-1; y < 0; y--) {
+        print_delay(border_char, TITLE_BORDER_DELAY, x, y);
+    }
+    for(x = x-1; x < 0; x--) {
+        print_delay(border_char, TITLE_BORDER_DELAY, x, y);
+    }
 }
 
 static void play_maze() {

@@ -19,10 +19,13 @@
  */
 void print_center(char *message, int delay_microsec, int x_offset, int num_delim_spaces) {
     int row, col, x, y;
-
+    
     getmaxyx(stdscr, row, col);
+
+    // position in center of screen
     x = row / 2 + x_offset;
-    y = ((col - strlen(message)) / 2);        
+    y = (col - ( strlen(message) * (num_delim_spaces + 1) ) ); 
+    y = y < 0 ? 0 : y / 2;    
 
     // build space string separator
     char space_delim[MAX_DELIM_SPACES];
@@ -55,4 +58,12 @@ void print_center(char *message, int delay_microsec, int x_offset, int num_delim
     }
 
     attroff(COLOR_PAIR(1));
+}
+
+void print_delay(char *message, int delay_microsec, int x, int y) {
+    for(int i = 0; i < strlen(message); i++) {
+        mvaddch(x, y, message[i]);
+        refresh();
+        usleep(delay_microsec);
+    }
 }
