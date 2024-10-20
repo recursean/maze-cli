@@ -1,5 +1,6 @@
 #include <ncurses.h>
 #include "ncurses_funcs.h"
+#include "maze_gen.h"
 
 #define HELP_DELAY 50000
 #define TITLE_BORDER_DELAY 5000
@@ -18,6 +19,8 @@ int main() {
         switch(ch) { 
             case 's':
                 clear();
+                gen_maze_dfs();
+                print_maze();
                 play_maze();
                 break;
             default:

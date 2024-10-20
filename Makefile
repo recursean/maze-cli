@@ -4,7 +4,7 @@ CC = cc
 CFLAGS = -Wall
 
 # Source files
-SRCS = maze.c ncurses_funcs.c
+SRCS = maze.c maze_gen.c stack.c ncurses_funcs.c
 # Object files (replace .c with .o)
 OBJS = $(SRCS:.c=.o)
 # Link with external libraries

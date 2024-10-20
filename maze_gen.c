@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
+#include "maze_gen.h"
+#include "stack.h"
 
 #define MAZE_ROWS (10)
 #define MAZE_COLS (10)
@@ -13,22 +15,10 @@
 #define WALL_SOUTH (2)
 #define WALL_WEST  (3)
 
+static int opposite_wall(int wall);
+static Neighbor get_random_neighbor(Tile *curr_tile);
+
 Tile maze[MAZE_ROWS][MAZE_COLS];
-
-// Single tile in maze
-typedef struct {
-    // 0 N, 1 E, 2 S, 3 W
-    bool walls[4];
-    bool visited;
-    int x;
-    int y;
-} Tile;
-
-// Neighbor tile in maze
-typedef struct {
-    int tile_wall;
-    Tile *tile;
-} Neighbor;
 
 /**
  * Generate 2D maze using DFS.
@@ -48,42 +38,47 @@ void gen_maze_dfs() {
             }
         }
     }
-    // stack tiles;
 
     // start at random tile
     int curr_row = rand() % MAZE_ROWS;
     int curr_col = rand() % MAZE_COLS;
     Tile *curr_tile = &maze[curr_row][curr_col];
 
-    // loop 
-    // while(!stack.isEmpty()) {
-
-    // }
-    
-    // choose random neighbor tile
-    Neighbor rand_neighbor = {0};
-    rand_neighbor = get_random_neighbor(curr_tile);
-
-    // remove wall between current and neighbor tile
-    if(rand_neighbor.tile != 0) {
-        curr_tile->walls[rand_neighbor.tile_wall] = false;
-    }
-    else {
-        // pop from stack
-        // curr_tile = stack.pop();
-    }
-
-    // remove wall between neighbor and current tile
-    rand_neighbor.tile->walls[opposite_wall(rand_neighbor.tile_wall)] = false;
-
-    // mark current tile as visited
-    curr_tile->visited = true;
-
     // push current tile onto stack
-    // stack.push(curr_tile);
+    push(curr_tile);
 
-    // prepare for next iteration
-    curr_tile = rand_neighbor.tile;
+    // loop 
+    while(!isEmpty()) {
+        // mark current tile as visited
+        curr_tile->visited = true;
+
+        // choose random neighbor tile
+        Neighbor rand_neighbor = {0};
+        rand_neighbor = get_random_neighbor(curr_tile);
+
+        // remove wall between current and neighbor tile
+        if(rand_neighbor.tile_wall != -1) {
+            curr_tile->walls[rand_neighbor.tile_wall] = false;
+        }
+        else {
+            // pop from stack and iterate again
+            curr_tile = pop(); 
+            continue;
+        }
+
+        // remove wall between neighbor and current tile
+        rand_neighbor.tile->walls[opposite_wall(rand_neighbor.tile_wall)] = false;
+
+        // push current tile onto stack
+        push(curr_tile);
+
+        // prepare for next iteration
+        curr_tile = rand_neighbor.tile;
+    }
+}
+
+void print_maze() {
+
 }
 
 /**
@@ -92,7 +87,7 @@ void gen_maze_dfs() {
  * @param wall Current wall to return opposite of
  * @return Opposite wall of specified wall
  */
-int opposite_wall(int wall) {
+static int opposite_wall(int wall) {
     if(wall >= 2) {
         return wall - 2;
     }
@@ -110,7 +105,7 @@ int opposite_wall(int wall) {
  * @param curr_tile Current position in maze
  * @return Neighbor tile
  */
-Neighbor get_random_neighbor(Tile *curr_tile) {
+static Neighbor get_random_neighbor(Tile *curr_tile) {
     Neighbor unvisited_neighbors[4];
     int unvisited_neighbors_count = 0;
     Tile *neighbor_tile = NULL;
@@ -155,13 +150,11 @@ Neighbor get_random_neighbor(Tile *curr_tile) {
 
     if(unvisited_neighbors_count == 0) {
         // all neighbors visited
-        return;
+        Neighbor neighbor;
+        neighbor.tile_wall = -1;
+        return neighbor;
     }   
     
     // return random unvisited neighbor
     return unvisited_neighbors[rand() % unvisited_neighbors_count];
-}
-
-int main() {
-    gen_maze_dfs();
 }
