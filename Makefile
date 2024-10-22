@@ -1,7 +1,7 @@
 # Compiler 
 CC = cc
 # Compiler flags
-CFLAGS = -Wall
+CFLAGS = -Wall -g
 
 # Source files
 SRCS = maze.c maze_gen.c stack.c ncurses_funcs.c

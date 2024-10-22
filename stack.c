@@ -14,7 +14,7 @@ int used_size = 0;
  */
 Tile *pop() {
     if(used_size > 0) {
-        return tile_stack[used_size--];
+        return tile_stack[--used_size];
     }
     else {
         return NULL;

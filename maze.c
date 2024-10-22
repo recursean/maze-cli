@@ -11,6 +11,7 @@ static void print_title_border();
 static void play_maze();
 
 int main() {
+    gen_maze_dfs();
     init_ncurses();
     display_title();
 
@@ -19,9 +20,8 @@ int main() {
         switch(ch) { 
             case 's':
                 clear();
-                gen_maze_dfs();
                 print_maze();
-                play_maze();
+                // play_maze();
                 break;
             default:
                 continue;

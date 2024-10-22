@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
+#include <ncurses.h>
 #include "maze_gen.h"
 #include "stack.h"
 
@@ -39,10 +40,13 @@ void gen_maze_dfs() {
         }
     }
 
-    // start at random tile
-    int curr_row = rand() % MAZE_ROWS;
+    // start at random tile on bottom row
+    int curr_row = MAZE_ROWS - 1;
     int curr_col = rand() % MAZE_COLS;
     Tile *curr_tile = &maze[curr_row][curr_col];
+
+    // knock down south wall of entrance
+    curr_tile->walls[WALL_SOUTH] = false;
 
     // push current tile onto stack
     push(curr_tile);
@@ -77,8 +81,43 @@ void gen_maze_dfs() {
     }
 }
 
+/**
+ * 
+ *  - 
+ * | |
+ *  -
+ * 
+ */
 void print_maze() {
+    int x = 1;
+    int y = 0;
 
+    for(int i = 0; i < MAZE_ROWS; i++) {
+        for(int j = 0; j < MAZE_COLS; j++) {
+            if(maze[i][j].walls[WALL_WEST]) {
+                mvaddch(x+1, y++, '|');
+            } else {
+                mvaddch(x, y++, ' ');
+            }
+            if(maze[i][j].walls[WALL_NORTH]) {
+                mvaddch(x-1, y, '-');
+            } else {
+                mvaddch(x, y, ' ');
+            }
+            if(maze[i][j].walls[WALL_SOUTH]) {
+                mvaddch(x+1, y++, '-');
+            } else {
+                mvaddch(x, y++, ' ');
+            }
+            if(maze[i][j].walls[WALL_EAST]) {
+                mvaddch(x, y++, '|');
+            } else {
+                mvaddch(x, y++, ' ');
+            }
+        }
+        x++;
+        y = 0;
+    }
 }
 
 /**
