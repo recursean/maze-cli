@@ -3,7 +3,7 @@
 
 void draw_maze(Maze *maze, Player *player) {
     draw_player(player);
-    draw_walls(maze, gitplayer);
+    draw_walls(maze, player);
 }
 
 void draw_player(Player *player) {
