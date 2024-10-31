@@ -6,36 +6,26 @@
 #include "maze_gen.h"
 #include "stack.h"
 
-#define MAZE_ROWS (10)
-#define MAZE_COLS (10)
-
-#define TILE_WALLS (4)
-
-#define WALL_NORTH (0)
-#define WALL_EAST  (1)
-#define WALL_SOUTH (2)
-#define WALL_WEST  (3)
-
 static int opposite_wall(int wall);
-static Neighbor get_random_neighbor(Tile *curr_tile);
-
-Tile maze[MAZE_ROWS][MAZE_COLS];
+static Neighbor get_random_neighbor(Tile *curr_tile, Maze *maze);
 
 /**
  * Generate 2D maze using DFS.
  */
-void gen_maze_dfs() {
+Maze gen_maze_dfs() {
+    Maze maze = {0};
+
     // seed random number generator with current time
     srand(time(0));
 
     // init walls on all sides for all tiles to be true
     for(int i = 0; i < MAZE_ROWS; i++) {
         for(int j = 0; j < MAZE_COLS; j++) {
-            maze[i][j].visited = false;
-            maze[i][j].x = i;
-            maze[i][j].y = j;
+            maze.maze[i][j].visited = false;
+            maze.maze[i][j].x = i;
+            maze.maze[i][j].y = j;
             for(int k = 0; k < TILE_WALLS; k++) {
-                maze[i][j].walls[k] = true;
+                maze.maze[i][j].walls[k] = true;
             }
         }
     }
@@ -43,10 +33,14 @@ void gen_maze_dfs() {
     // start at random tile on bottom row
     int curr_row = MAZE_ROWS - 1;
     int curr_col = rand() % MAZE_COLS;
-    Tile *curr_tile = &maze[curr_row][curr_col];
+    Tile *curr_tile = &(maze.maze[curr_row][curr_col]);
 
-    // knock down south wall of entrance
+    // knock down south wall of entrance. this is start of maze.
     curr_tile->walls[WALL_SOUTH] = false;
+    maze.start_tile = curr_tile;
+
+    // exit tile will be the last north wall tile we hit during generation.
+    maze.end_tile = NULL;
 
     // push current tile onto stack
     push(curr_tile);
@@ -58,7 +52,7 @@ void gen_maze_dfs() {
 
         // choose random neighbor tile
         Neighbor rand_neighbor = {0};
-        rand_neighbor = get_random_neighbor(curr_tile);
+        rand_neighbor = get_random_neighbor(curr_tile ,&maze);
 
         // remove wall between current and neighbor tile
         if(rand_neighbor.tile_wall != -1) {
@@ -79,6 +73,13 @@ void gen_maze_dfs() {
         // prepare for next iteration
         curr_tile = rand_neighbor.tile;
     }
+
+    // knock down northern wall of exit
+    if(maze.end_tile != NULL) {
+        maze.end_tile->walls[WALL_NORTH] = false;
+    }
+
+    return maze;
 }
 
 /**
@@ -88,34 +89,34 @@ void gen_maze_dfs() {
  *  -
  * 
  */
-void print_maze() {
+void print_maze(Maze *maze) {
     int x = 1;
     int y = 0;
 
     for(int i = 0; i < MAZE_ROWS; i++) {
         for(int j = 0; j < MAZE_COLS; j++) {
-            if(maze[i][j].walls[WALL_WEST]) {
-                mvaddch(x+1, y++, '|');
+            if(maze->maze[i][j].walls[WALL_WEST]) {
+                mvaddch(x, y++, '|');
             } else {
                 mvaddch(x, y++, ' ');
             }
-            if(maze[i][j].walls[WALL_NORTH]) {
+            if(maze->maze[i][j].walls[WALL_NORTH]) {
                 mvaddch(x-1, y, '-');
             } else {
-                mvaddch(x, y, ' ');
+                mvaddch(x-1, y, ' ');
             }
-            if(maze[i][j].walls[WALL_SOUTH]) {
+            if(maze->maze[i][j].walls[WALL_SOUTH]) {
                 mvaddch(x+1, y++, '-');
             } else {
-                mvaddch(x, y++, ' ');
+                mvaddch(x+1, y++, ' ');
             }
-            if(maze[i][j].walls[WALL_EAST]) {
+            if(maze->maze[i][j].walls[WALL_EAST]) {
                 mvaddch(x, y++, '|');
             } else {
                 mvaddch(x, y++, ' ');
             }
         }
-        x++;
+        x+=2;
         y = 0;
     }
 }
@@ -144,7 +145,7 @@ static int opposite_wall(int wall) {
  * @param curr_tile Current position in maze
  * @return Neighbor tile
  */
-static Neighbor get_random_neighbor(Tile *curr_tile) {
+static Neighbor get_random_neighbor(Tile *curr_tile, Maze *maze) {
     Neighbor unvisited_neighbors[4];
     int unvisited_neighbors_count = 0;
     Tile *neighbor_tile = NULL;
@@ -153,27 +154,28 @@ static Neighbor get_random_neighbor(Tile *curr_tile) {
         switch(i) {
             case WALL_NORTH:
                 if(curr_tile->x - 1 < 0) {
+                    maze->end_tile = curr_tile;
                     continue;
                 }
-                neighbor_tile = &maze[curr_tile->x - 1][curr_tile->y];
+                neighbor_tile = &maze->maze[curr_tile->x - 1][curr_tile->y];
                 break;
             case WALL_EAST:
                 if(curr_tile->y + 1 >= MAZE_COLS) {
                     continue;
                 }
-                neighbor_tile = &maze[curr_tile->x][curr_tile->y + 1];
+                neighbor_tile = &maze->maze[curr_tile->x][curr_tile->y + 1];
                 break;
             case WALL_SOUTH:
                 if(curr_tile->x + 1 >= MAZE_ROWS) {
                     continue;
                 }
-                neighbor_tile = &maze[curr_tile->x + 1][curr_tile->y];
+                neighbor_tile = &maze->maze[curr_tile->x + 1][curr_tile->y];
                 break;
             case WALL_WEST:
                 if(curr_tile->y - 1 < 0) {
                     continue;
                 }
-                neighbor_tile = &maze[curr_tile->x][curr_tile->y - 1];
+                neighbor_tile = &maze->maze[curr_tile->x][curr_tile->y - 1];
                 break;
             default:
                 break;

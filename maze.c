@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include <ncurses.h>
 #include "ncurses_funcs.h"
 #include "maze_gen.h"
@@ -5,13 +6,20 @@
 #define HELP_DELAY 50000
 #define TITLE_BORDER_DELAY 5000
 
+#define PLAYER_CHAR '*'
+
 static void init_ncurses();
 static void display_title();
 static void print_title_border();
-static void play_maze();
+static void play_maze(Maze *maze);
+
+typedef struct {
+    Tile *curr_tile;
+} Player;
 
 int main() {
-    gen_maze_dfs();
+    Maze maze = gen_maze_dfs();
+    play_maze(&maze);
     init_ncurses();
     display_title();
 
@@ -20,8 +28,8 @@ int main() {
         switch(ch) { 
             case 's':
                 clear();
-                print_maze();
-                // play_maze();
+                print_maze(&maze);
+                play_maze(&maze);
                 break;
             default:
                 continue;
@@ -83,36 +91,48 @@ static void print_title_border() {
     }
 }
 
-static void play_maze() {
+static void play_maze(Maze *maze) {
     int ch;
-    int x = 0, y = 0;
-    char *player = "^";
+    // char *player = "^";
+    Player player = {0};
+    player.curr_tile = maze->start_tile;
 
     // move cursor to coords (y, x) and print player
-    mvprintw(y, x, player);
+    mvaddch(maze->start_tile->y, maze->start_tile->x - 1, PLAYER_CHAR);
+    // mvprintw(y, x, player);
     refresh();
 
+    // exit maze when user presses q
+    bool exit = false;
+
     while ((ch = getch()) != 'q') {
-        mvprintw(y, x, " "); // Erase the character
+        // erase old player position 
+        mvaddch(player.curr_tile->y, player.curr_tile->x, ' ');
         switch (ch) {
             case KEY_UP:    
-                y--; 
-                player = "^";
+                player.curr_tile->y--; 
                 break;
             case KEY_DOWN:  
-                y++; 
-                player = "v";
+                player.curr_tile->y++; 
                 break;
             case KEY_LEFT:  
-                x--;
-                player = "<"; 
+                player.curr_tile->x--;
                 break;
             case KEY_RIGHT: 
-                x++; 
-                player = ">";
+                player.curr_tile->x++; 
+                break;
+            case 'q': 
+                exit = true; 
                 break;
         }
-        mvprintw(y, x, player); // Draw the character
+
+        // user requested exit
+        if(exit) {
+            break;
+        }
+
+        // draw player
+        mvaddch(player.curr_tile->y, player.curr_tile->x, PLAYER_CHAR);
         refresh();
     }
 }
