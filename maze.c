@@ -1,25 +1,20 @@
 #include <stdbool.h>
 #include <ncurses.h>
 #include "ncurses_funcs.h"
+#include "maze.h"
 #include "maze_gen.h"
+#include "maze_draw.h"
 
 #define HELP_DELAY 50000
 #define TITLE_BORDER_DELAY 5000
-
-#define PLAYER_CHAR '*'
 
 static void init_ncurses();
 static void display_title();
 static void print_title_border();
 static void play_maze(Maze *maze);
 
-typedef struct {
-    Tile *curr_tile;
-} Player;
-
 int main() {
     Maze maze = gen_maze_dfs();
-    play_maze(&maze);
     init_ncurses();
     display_title();
 
@@ -67,7 +62,7 @@ static void display_title() {
     print_center(help_msg1, HELP_DELAY, 3, 1); 
     print_center(help_msg2, HELP_DELAY, 4, 1); 
 
-    print_title_border();
+    // print_title_border();
 }
 
 static void print_title_border() {
@@ -93,13 +88,11 @@ static void print_title_border() {
 
 static void play_maze(Maze *maze) {
     int ch;
-    // char *player = "^";
     Player player = {0};
     player.curr_tile = maze->start_tile;
 
-    // move cursor to coords (y, x) and print player
-    mvaddch(maze->start_tile->y, maze->start_tile->x - 1, PLAYER_CHAR);
-    // mvprintw(y, x, player);
+    // draw player and walls on screen
+    draw_maze(maze, &player);
     refresh();
 
     // exit maze when user presses q
@@ -131,8 +124,11 @@ static void play_maze(Maze *maze) {
             break;
         }
 
+        // draw updated player
+        draw_maze(maze, &player);
+
         // draw player
-        mvaddch(player.curr_tile->y, player.curr_tile->x, PLAYER_CHAR);
+        // mvaddch(player.curr_tile->y, player.curr_tile->x, PLAYER_CHAR);
         refresh();
     }
 }
